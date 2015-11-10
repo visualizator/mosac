@@ -1,0 +1,76 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+
+    <script type="text/javascript" src="js/jquery-2.1.3.min.js"></script>
+    <script type="text/javascript" src="js/prefixfree.min.js"></script> <!--// css에 prefix를 자동으로 붙여준다 -->
+    <script type="text/javascript" src="js/respond.min.js"></script> <!--// IE 에서 미디어 쿼리를 적용하게 해준다-->
+</head>
+<body>
+    <div id="content" style="width:640px; margin:0 auto;">
+        <img src="image/ko_president.jpg" id="my-image" style="float:left; width:320px; height:450px" />
+        <canvas id="myCanvas" width="320" height="450" style="display:none;"></canvas>
+        <div id="result" style="float:left; width:320px; height:450px;"></div>
+
+        <script>
+            $(window).load(function () {
+                function Imsi() {
+                    this.colorMap = [];
+                    this.index = 0;
+                    this.imageM = $('#myCanvas')[0];
+                    this.ctx = this.imageM.getContext('2d');
+                    this.image = $('#my-image')[0];
+                    this.ctx.drawImage(this.image, 0, 0);
+
+                    this.imgData = this.ctx.getImageData(0, 0, this.imageM.width, this.imageM.height);
+
+                    this.image_array_r = [];
+                    this.image_array_g = [];
+                    this.image_array_b = [];
+
+                    this.mosac(this.imgData, this.imageM.width, this.imageM.height, 5);
+                }
+
+                Imsi.prototype.mosac = function (imgData, width, height, scale) {
+
+                    for (var i = 0; i < imgData.data.length; i += scale * 4) {
+                        if (i != 0) {
+                            if ((i % (width * 4)) == 0) { i = i + width * 4 * (scale - 1); } // scale - 1 중요
+                        }
+                        this.image_array_r[this.index] = 0, this.image_array_g[this.index] = 0, this.image_array_b[this.index] = 0;
+                        for (var j = 0; j < scale; j++) {
+                            for (var k = 0; k < scale; k++) {
+                                this.image_array_r[this.index] += imgData.data[i + 4 * j + width * 4 * k];
+                                this.image_array_g[this.index] += imgData.data[i + 4 * j + 1 + width * 4 * k];
+                                this.image_array_b[this.index] += imgData.data[i + 4 * j + 2 + width * 4 * k];
+                            }
+                        }
+
+                        this.image_array_r[this.index] = this.image_array_r[this.index] / (scale * scale);
+                        this.image_array_g[this.index] = this.image_array_g[this.index] / (scale * scale);
+                        this.image_array_b[this.index] = this.image_array_b[this.index] / (scale * scale);
+
+                        this.index++;
+                    }
+
+                    for (var i = 0; i < this.index / (width / scale) ; i++) {
+                        for (var j = 0; j < width / scale ; j++) {
+                            $('#result').append('<span style="float: left; width:5px; height:5px; background-color: rgb('
+                                + Math.round(this.image_array_r[((width / scale) * i) + j]) + ', '
+                                + Math.round(this.image_array_g[((width / scale) * i) + j]) + ', '
+                                + Math.round(this.image_array_b[((width / scale) * i) + j])
+                                + '); border-radius: 100px;"></span>');
+                        }
+                    }
+                }
+
+                var imsi = new Imsi();
+
+            })
+        </script>
+    </div>
+</body>
+</html>
